@@ -19,7 +19,7 @@ export function TodoListSidebar({
   const handleAddList = async () => {
     if (newListName.trim()) {
       const newList = {
-        id: todoLists.length + 1,
+        id: (todoLists.length + 1).toString(), // Convert to string
         name: newListName.trim(),
         todos: []
       }

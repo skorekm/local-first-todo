@@ -19,11 +19,13 @@
     "@tanstack/react-query": "^5.89.0",
     "@tanstack/react-router": "^1.131.48",
     "@tanstack/router-devtools": "^1.131.48",
+    "@tanstack/rxdb-db-collection": "^0.1.12",
     "@types/node": "^24.5.2",
     "autoprefixer": "^10.4.21",
     "express": "^4.21.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "rxdb": "^16.19.1",
     "tailwindcss": "^4.1.13",
     "zod": "^4.1.11"
   },

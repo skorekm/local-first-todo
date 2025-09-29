@@ -44,16 +44,33 @@ app.get('/api/todos', (req, res) => {
 
 app.post('/api/todos', (req, res) => {
   const body = req.body ?? {}
-  const id = Number.isFinite(body.id) ? Number(body.id) : Object.keys(mockTodos).length + 1
-  const newList = {
-    id,
-    name: typeof body.name === 'string' ? body.name : '',
-    todos: [],
+  
+  // Check if it's an array (from RxDB push)
+  if (Array.isArray(body)) {
+    const results = body.map(item => {
+      const id = item.id || (mockTodos.length + 1).toString()
+      const newList = {
+        id,
+        name: item.name || '',
+        todos: item.todos || [],
+      }
+      mockTodos.push(newList)
+      return newList
+    })
+    res.status(201).json(results)
+  } else {
+    // Handle single document (existing logic)
+    const id = Number.isFinite(body.id) ? Number(body.id) : Object.keys(mockTodos).length + 1
+    const newList = {
+      id,
+      name: typeof body.name === 'string' ? body.name : '',
+      todos: [],
+    }
+    if (!mockTodos[id]) {
+      mockTodos[id - 1] = newList
+    }
+    res.status(201).json(newList)
   }
-  if (!mockTodos[id]) {
-    mockTodos[id - 1] = newList
-  }
-  res.status(201).json(newList)
 })
 
 app.put('/api/todos/:id', (req, res) => {

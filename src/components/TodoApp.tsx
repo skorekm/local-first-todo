@@ -6,22 +6,23 @@ import { TodoContent } from './TodoContent';
 
 
 export interface Todo {
-  id: number
+  id: string
   text: string
   completed: boolean
 }
 
 
 export interface TodoList {
-  id: number
+  id: string
   name: string
   todos: Todo[];
 }
 
 export default function TodoApp() {
   const [selectedListId, setSelectedListId] = useState<string>('')
-  const { data: todoLists = [], isLoading } = useLiveQuery((q) => q.from({todo: todoCollection}))
-  const selectedList = todoLists.find((list) => list.id === Number(selectedListId))
+  const { data: rawTodoLists = [], isLoading } = useLiveQuery((q) => q.from({todo: todoCollection}))
+  const todoLists = rawTodoLists as TodoList[]
+  const selectedList = todoLists.find((list) => list.id === selectedListId)
   const currentTodos = selectedList?.todos || []
 
   if (isLoading) {
