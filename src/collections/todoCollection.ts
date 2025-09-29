@@ -24,7 +24,18 @@ export const todoCollection = createCollection(
       const data = await response.json()
       return data
     },
-    getKey: (item) => item.id,
+    getKey: (item) => item?.id,
     schema: todoSchema,
+    onInsert: async ({ transaction}) => {
+      const { modified: newList } = transaction.mutations[0];
+      const response = await fetch('/api/todos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newList),
+      })
+      return response.json()
+    },
   })
 )

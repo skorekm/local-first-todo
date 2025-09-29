@@ -45,17 +45,15 @@ app.get('/api/todos', (req, res) => {
 app.post('/api/todos', (req, res) => {
   const body = req.body ?? {}
   const id = Number.isFinite(body.id) ? Number(body.id) : Object.keys(mockTodos).length + 1
-  const newTodo = {
+  const newList = {
     id,
-    text: typeof body.text === 'string' ? body.text : '',
-    completed: Boolean(body.completed),
+    name: typeof body.name === 'string' ? body.name : '',
+    todos: [],
   }
   if (!mockTodos[id]) {
-    mockTodos[id] = [newTodo]
-  } else {
-    mockTodos[id].push(newTodo)
+    mockTodos[id - 1] = newList
   }
-  res.status(201).json(newTodo)
+  res.status(201).json(newList)
 })
 
 app.put('/api/todos/:id', (req, res) => {

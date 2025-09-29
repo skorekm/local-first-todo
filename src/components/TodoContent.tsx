@@ -6,6 +6,7 @@ interface TodoContentProps {
 }
 
 export function TodoContent({ selectedList, todos }: TodoContentProps) {
+
   if (!selectedList) {
     return (
       <div className="flex-1 flex items-center justify-center">
