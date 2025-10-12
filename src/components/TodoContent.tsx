@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import type { TodoList, Todo } from './TodoApp'
+import { db } from '../collections/todoRxdb'
 
 interface TodoContentProps {
   selectedList?: TodoList
@@ -6,6 +8,71 @@ interface TodoContentProps {
 }
 
 export function TodoContent({ selectedList, todos }: TodoContentProps) {
+  const [newTodoText, setNewTodoText] = useState('')
+
+  const handleAddTodo = async () => {
+    if (!selectedList || !newTodoText.trim()) return
+
+    const newTodo: Todo = {
+      id: crypto.randomUUID(),
+      text: newTodoText.trim(),
+      completed: false
+    }
+
+    try {
+      const doc = await db.todos.findOne(selectedList.id).exec()
+      if (doc) {
+        await doc.incrementalModify((oldData: TodoList) => {
+          oldData.todos.push(newTodo)
+          return oldData
+        })
+        setNewTodoText('')
+      }
+    } catch (error) {
+      console.error('Failed to add todo:', error)
+    }
+  }
+
+  const handleToggleTodo = async (todoId: string) => {
+    if (!selectedList) return
+
+    try {
+      const doc = await db.todos.findOne(selectedList.id).exec()
+      if (doc) {
+        await doc.incrementalModify((oldData: TodoList) => {
+          const todo = oldData.todos.find(t => t.id === todoId)
+          if (todo) {
+            todo.completed = !todo.completed
+          }
+          return oldData
+        })
+      }
+    } catch (error) {
+      console.error('Failed to toggle todo:', error)
+    }
+  }
+
+  const handleRemoveTodo = async (todoId: string) => {
+    if (!selectedList) return
+
+    try {
+      const doc = await db.todos.findOne(selectedList.id).exec()
+      if (doc) {
+        await doc.incrementalModify((oldData: TodoList) => {
+          oldData.todos = oldData.todos.filter(t => t.id !== todoId)
+          return oldData
+        })
+      }
+    } catch (error) {
+      console.error('Failed to remove todo:', error)
+    }
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleAddTodo()
+    }
+  }
 
   if (!selectedList) {
     return (
@@ -40,13 +107,19 @@ export function TodoContent({ selectedList, todos }: TodoContentProps) {
       <div className="mb-6">
         <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-white/20">
           <div className="flex items-center space-x-3">
-            <div className="w-5 h-5 rounded-full border-2 border-gray-300"></div>
             <input
               type="text"
               placeholder="Add a new todo..."
               className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-500"
+              value={newTodoText}
+              onChange={(e) => setNewTodoText(e.target.value)}
+              onKeyPress={handleKeyPress}
             />
-            <button className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors">
+            <button 
+              onClick={handleAddTodo}
+              className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!newTodoText.trim()}
+            >
               Add
             </button>
           </div>
@@ -69,6 +142,7 @@ export function TodoContent({ selectedList, todos }: TodoContentProps) {
             >
               <div className="flex items-center space-x-3">
                 <button
+                  onClick={() => handleToggleTodo(todo.id)}
                   className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
                     todo.completed
                       ? 'bg-green-400 border-green-400 text-white'
@@ -94,7 +168,10 @@ export function TodoContent({ selectedList, todos }: TodoContentProps) {
                 >
                   {todo.text}
                 </span>
-                <button className="text-gray-400 hover:text-red-500 transition-colors">
+                <button 
+                  onClick={() => handleRemoveTodo(todo.id)}
+                  className="text-gray-400 hover:text-red-500 transition-colors"
+                >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"

@@ -48,14 +48,34 @@ app.post('/api/todos', (req, res) => {
   // Check if it's an array (from RxDB push)
   if (Array.isArray(body)) {
     const results = body.map(item => {
-      const id = item.id || (mockTodos.length + 1).toString()
-      const newList = {
+      const id = item.id.toString()
+      
+      // Handle deletions - RxDB marks deleted documents with _deleted: true
+      if (item._deleted) {
+        const idx = mockTodos.findIndex(t => t.id.toString() === id)
+        if (idx !== -1) {
+          mockTodos.splice(idx, 1)
+        }
+        return { id, _deleted: true }
+      }
+      
+      // Handle updates or inserts
+      const existingIdx = mockTodos.findIndex(t => t.id.toString() === id)
+      const todoList = {
         id,
         name: item.name || '',
         todos: item.todos || [],
       }
-      mockTodos.push(newList)
-      return newList
+      
+      if (existingIdx !== -1) {
+        // Update existing
+        mockTodos[existingIdx] = todoList
+      } else {
+        // Insert new
+        mockTodos.push(todoList)
+      }
+      
+      return todoList
     })
     res.status(201).json(results)
   } else {
@@ -90,7 +110,7 @@ app.delete('/api/todos/:id', (req, res) => {
   res.json(removed)
 })
 
-const port = process.env.PORT || 3001
+const port = process.env.PORT || 3002
 app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`)
 })

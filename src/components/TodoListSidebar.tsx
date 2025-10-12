@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { TodoList } from './TodoApp'
 import { todoService } from '../services/todoService'
+import { db } from '../collections/todoRxdb'
 
 interface TodoListSidebarProps {
   todoLists: TodoList[]
@@ -33,6 +34,25 @@ export function TodoListSidebar({
     }
   }
 
+  const handleRemoveList = async (listId: string, e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent triggering list selection
+    
+    if (window.confirm('Are you sure you want to delete this list? This action cannot be undone.')) {
+      try {
+        const doc = await db.todos.findOne(listId).exec()
+        if (doc) {
+          await doc.remove()
+          // If the deleted list was selected, clear the selection
+          if (selectedListId === listId) {
+            onSelectList('')
+          }
+        }
+      } catch (error) {
+        console.error('Failed to remove list:', error)
+      }
+    }
+  }
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleAddList()
@@ -51,22 +71,39 @@ export function TodoListSidebar({
 
       <div className="space-y-3">
         {todoLists.map((list) => (
-          <button
+          <div
             key={list.id}
-            onClick={() => onSelectList(String(list.id))}
             className={`
-              w-full text-left p-4 rounded-xl transition-all duration-200 
+              relative w-full text-left p-4 rounded-xl transition-all duration-200 cursor-pointer group
               ${selectedListId === String(list.id) 
                 ? 'ring-2 ring-gray-400 shadow-lg scale-105' 
                 : 'hover:shadow-md hover:scale-102'
               }
             `}
+            onClick={() => onSelectList(String(list.id))}
           >
             <div className="flex items-center justify-between">
               <span className="font-semibold text-gray-800">{list.name}</span>
-              <div className="w-3 h-3 rounded-full bg-white/50"></div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">
+                  {list.todos.length} {list.todos.length === 1 ? 'task' : 'tasks'}
+                </span>
+                <button
+                  onClick={(e) => handleRemoveList(list.id, e)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-100 rounded text-gray-400 hover:text-red-500"
+                  aria-label="Delete list"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
-          </button>
+          </div>
         ))}
       </div>
 
