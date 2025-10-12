@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { TodoList } from './TodoApp'
-import { todoCollection } from '../collections/todoCollection'
+import { todoService } from '../services/todoService'
 
 interface TodoListSidebarProps {
   todoLists: TodoList[]
@@ -24,7 +24,7 @@ export function TodoListSidebar({
         todos: []
       }
       try {
-        await todoCollection.insert(newList)
+        await todoService.postTodo(newList)
         setNewListName('')
         setIsAddingList(false)
       } catch (error) {
