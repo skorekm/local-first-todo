@@ -107,7 +107,6 @@ export function TodoContent({ selectedList, todos }: TodoContentProps) {
       <div className="mb-6">
         <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-white/20">
           <div className="flex items-center space-x-3">
-            <div className="w-5 h-5 rounded-full border-2 border-gray-300"></div>
             <input
               type="text"
               placeholder="Add a new todo..."
